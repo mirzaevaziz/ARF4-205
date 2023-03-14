@@ -1,60 +1,59 @@
-namespace GenomExperiment.Models
+namespace GenomExperiment.Models;
+
+public class ObjectInfo
 {
-    public class ObjectInfo
+    public int Index { get; set; }
+    public int? ClassValue { get; set; }
+
+    public decimal this[int index]
     {
-        public int Index { get; set; }
-        public int? ClassValue { get; set; }
+        get { return Data[index]; }
+        set { Data[index] = value; }
+    }
 
-        public decimal this[int index]
+    public decimal[] Data { get; set; } = null!;
+
+    public override string ToString()
+    {
+        return $"Object {Index} : [{string.Join(", ", Data)}], {ClassValue}";
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
         {
-            get { return Data[index]; }
-            set { Data[index] = value; }
+            return false;
         }
 
-        public decimal[] Data { get; set; } = null!;
+        var o = obj as ObjectInfo;
+        if (o?.Data.Length != Data.Length)
+            return false;
 
-        public override string ToString()
-        {
-            return $"Object {Index} : [{string.Join(", ", Data)}], {ClassValue}";
-        }
+        if (ClassValue != ClassValue)
+            return false;
 
-        public override bool Equals(object? obj)
+        for (int i = 0; i < Data.Length; i++)
         {
-            if (obj == null || GetType() != obj.GetType())
-            {
+            if (Data[i] != o.Data[i])
                 return false;
-            }
-
-            var o = obj as ObjectInfo;
-            if (o?.Data.Length != Data.Length)
-                return false;
-
-            if (ClassValue != ClassValue)
-                return false;
-
-            for (int i = 0; i < Data.Length; i++)
-            {
-                if (Data[i] != o.Data[i])
-                    return false;
-            }
-
-            return true;
         }
 
-        public override int GetHashCode()
+        return true;
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
+    }
+
+    internal bool EqualsByValues(ObjectInfo objectInfo)
+    {
+        for (int i = 0; i < this.Data.Length; i++)
         {
-            return base.GetHashCode();
+            if (this[i] != objectInfo[i])
+                return false;
         }
 
-        internal bool EqualsByValues(ObjectInfo objectInfo)
-        {
-            for (int i = 0; i < this.Data.Length; i++)
-            {
-                if (this[i] != objectInfo[i])
-                    return false;
-            }
-
-            return true;
-        }
+        return true;
     }
 }
