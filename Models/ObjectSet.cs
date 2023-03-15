@@ -12,7 +12,12 @@ namespace GenomExperiment.Models
 
         public string Name { get; }
 
-        public ObjectSet(string name, Dictionary<int, ObjectInfo> objects, Feature[] features, int classValue = 1)
+        public ObjectSet(
+            string name,
+            Dictionary<int, ObjectInfo> objects,
+            Feature[] features,
+            int classValue = 1
+        )
         {
             Name = name;
             Objects = objects;
@@ -31,7 +36,9 @@ namespace GenomExperiment.Models
             foreach (var item in objects)
             {
                 if (features.Length != item.Value.Data.Length)
-                    throw new System.ArgumentException($"Length of objects #{item.Key} columns doesn't match to features length.");
+                    throw new System.ArgumentException(
+                        $"Length of objects #{item.Key} columns doesn't match to features length."
+                    );
             }
         }
 
@@ -46,8 +53,15 @@ namespace GenomExperiment.Models
                , ClassValues = {string.Join(", ", GetClassValues())}";
         }
 
-        public int ClassObjectCount { get { return Objects.Count(w => w.Value.ClassValue == ClassValue); } }
-        public int NonClassObjectCount { get { return Objects.Count(w => w.Value.ClassValue != ClassValue); } }
+        public int ClassObjectCount
+        {
+            get { return Objects.Count(w => w.Value.ClassValue == ClassValue); }
+        }
+        public int NonClassObjectCount
+        {
+            get { return Objects.Count(w => w.Value.ClassValue != ClassValue); }
+        }
+
         public IEnumerable<int> GetClassValues()
         {
             return Objects.Select(s => s.Value.ClassValue.GetValueOrDefault(-1)).Distinct();
@@ -62,15 +76,26 @@ namespace GenomExperiment.Models
             }
         }
 
+        public void RemoveObject(IEnumerable<int> objectIndexList)
+        {
+            foreach (var i in this.Objects.Keys)
+            {
+                if (objectIndexList.Contains(i))
+                    this.Objects.Remove(i);
+            }
+        }
+
         public void RemoveDuplicates(out HashSet<int> notUniqueIndexes)
         {
             notUniqueIndexes = new HashSet<int>();
             foreach (var i in this.Objects.Keys)
             {
-                if (notUniqueIndexes.Contains(i)) continue;
+                if (notUniqueIndexes.Contains(i))
+                    continue;
                 foreach (var j in this.Objects.Keys)
                 {
-                    if (i == j || notUniqueIndexes.Contains(j)) continue;
+                    if (i == j || notUniqueIndexes.Contains(j))
+                        continue;
 
                     if (this.Objects[i].EqualsByValues(this.Objects[j]))
                     {
@@ -92,27 +117,38 @@ namespace GenomExperiment.Models
             using (var file = new StreamReader(path))
             {
                 var fline = file.ReadLine()?.Split('\t');
-                if (fline is null) return null;
+                if (fline is null)
+                    return null;
                 var objectsCount = int.Parse(fline[0]);
                 var featuresCount = int.Parse(fline[1]);
                 var objects = new Dictionary<int, ObjectInfo>();
                 for (int i = 0; i < objectsCount; i++)
                 {
                     var line = file.ReadLine()?.Split('\t');
-                    if (line is null || line.Any() == false) continue;
+                    if (line is null || line.Any() == false)
+                        continue;
                     objects[i] = new ObjectInfo
                     {
                         Index = i,
-                        Data = line.Take(featuresCount).Select(s => decimal.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture)).ToArray(),
+                        Data = line.Take(featuresCount)
+                            .Select(
+                                s =>
+                                    decimal.Parse(
+                                        s,
+                                        NumberStyles.Float,
+                                        CultureInfo.InvariantCulture
+                                    )
+                            )
+                            .ToArray(),
                         ClassValue = int.Parse(line[featuresCount])
                     };
                 }
                 int ind = 0;
-                var features = file.ReadLine()?.Split('\t').Take(featuresCount).Select(s => new Feature
-                {
-                    IsContinuous = s == "1",
-                    Name = $"Ft {ind++}"
-                }).ToArray();
+                var features = file.ReadLine()
+                    ?.Split('\t')
+                    .Take(featuresCount)
+                    .Select(s => new Feature { IsContinuous = s == "1", Name = $"Ft {ind++}" })
+                    .ToArray();
                 return new ObjectSet(path, objects, features ?? Array.Empty<Feature>(), classValue);
             }
         }
@@ -124,7 +160,9 @@ namespace GenomExperiment.Models
                 file.WriteLine($"{Objects.Count}\t{Features.Length}\t{GetClassValues().Count()}");
                 for (int i = 0; i < Objects.Count; i++)
                 {
-                    file.WriteLine($"{string.Join('\t', Objects[i].Data)}\t{Objects[i].ClassValue}");
+                    file.WriteLine(
+                        $"{string.Join('\t', Objects[i].Data)}\t{Objects[i].ClassValue}"
+                    );
                 }
                 foreach (var ft in Features)
                 {
@@ -153,15 +191,17 @@ namespace GenomExperiment.Models
                 }
             }
 
-
             using (var indexes = new StreamWriter(path + ".indexes"))
             using (var file = new StreamWriter(path))
             {
-                file.WriteLine($"{Objects.Count - deletedObjects?.Count ?? 0}\t{activeFeatures.Count}\t{GetClassValues().Count()}");
+                file.WriteLine(
+                    $"{Objects.Count - deletedObjects?.Count ?? 0}\t{activeFeatures.Count}\t{GetClassValues().Count()}"
+                );
 
                 for (int i = 0; i < Objects.Count; i++)
                 {
-                    if (deletedObjects?.Contains(i) == true) continue;
+                    if (deletedObjects?.Contains(i) == true)
+                        continue;
 
                     indexes.WriteLine(i);
                     for (int ft = 0; ft < this.Features.Length; ft++)

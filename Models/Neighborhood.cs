@@ -6,7 +6,13 @@ public class Neighborhood : List<Neighborhood.Neighbor>
 {
     public class Neighbor
     {
-        public Neighbor(int object1Index, int object2Index, int object1ClassValue, int object2ClassValue, decimal distance)
+        public Neighbor(
+            int object1Index,
+            int object2Index,
+            int object1ClassValue,
+            int object2ClassValue,
+            decimal distance
+        )
         {
             Object1Index = object1Index;
             Object2Index = object2Index;
@@ -23,7 +29,7 @@ public class Neighborhood : List<Neighborhood.Neighbor>
 
         public override string ToString()
         {
-            return $"[{Object1Index} ({Object1ClassValue}), {Object2Index} ({Object1ClassValue})] {Distance: 0.000000}";
+            return $"[{Object1Index} ({Object1ClassValue}), {Object2Index} ({Object2ClassValue})] {Distance: 0.000000}";
         }
     }
 
@@ -48,26 +54,40 @@ public class Neighborhood : List<Neighborhood.Neighbor>
 
     public IEnumerable<ObjectNeighborInfo> GetObjectNeigborList(int objectIndex)
     {
-        return this.Where(w => w.Object1Index == objectIndex || w.Object2Index == objectIndex).Select(s => new ObjectNeighborInfo(
-            (s.Object1Index == objectIndex) ? s.Object2Index : s.Object1Index,
-            (s.Object1Index == objectIndex) ? s.Object2ClassValue : s.Object1ClassValue,
-            s.Distance
-        ));
+        return this.Where(w => w.Object1Index == objectIndex || w.Object2Index == objectIndex)
+            .Select(
+                s =>
+                    new ObjectNeighborInfo(
+                        (s.Object1Index == objectIndex) ? s.Object2Index : s.Object1Index,
+                        (s.Object1Index == objectIndex) ? s.Object2ClassValue : s.Object1ClassValue,
+                        s.Distance
+                    )
+            );
     }
 
-    public IEnumerable<ObjectNeighborInfo> GetObjectNeigborList(int objectIndex, IEnumerable<int> excludedObjectIndexList)
+    public IEnumerable<ObjectNeighborInfo> GetObjectNeigborList(
+        int objectIndex,
+        IEnumerable<int> includedObjectIndexList
+    )
     {
-        if (excludedObjectIndexList?.Any() ?? false == false)
-            return GetObjectNeigborList(objectIndex);
+        var result = this.Where(
+                w =>
+                    (w.Object1Index == objectIndex || w.Object2Index == objectIndex)
+                    && (
+                        includedObjectIndexList.Contains(w.Object1Index)
+                        || includedObjectIndexList.Contains(w.Object2Index)
+                    )
+            )
+            .Select(
+                s =>
+                    new ObjectNeighborInfo(
+                        (s.Object1Index == objectIndex) ? s.Object2Index : s.Object1Index,
+                        (s.Object1Index == objectIndex) ? s.Object2ClassValue : s.Object1ClassValue,
+                        s.Distance
+                    )
+            );
 
-        return this.Where(w => (w.Object1Index == objectIndex || w.Object2Index == objectIndex)
-            && !excludedObjectIndexList.Contains(w.Object1Index)
-            && !excludedObjectIndexList.Contains(w.Object2Index))
-            .Select(s => new ObjectNeighborInfo(
-                (s.Object1Index == objectIndex) ? s.Object2Index : s.Object1Index,
-                (s.Object1Index == objectIndex) ? s.Object2ClassValue : s.Object1ClassValue,
-                s.Distance
-            ));
+        return result;
     }
 
     public override string ToString()
@@ -80,4 +100,3 @@ public class Neighborhood : List<Neighborhood.Neighbor>
         return sb.ToString();
     }
 }
-
