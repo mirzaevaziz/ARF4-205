@@ -12,37 +12,42 @@ public class FindGroupByAcquaintance
     {
         var result = new List<HashSet<int>>();
 
-        var coverageObjectIndexList = new BlockingCollection<int>();
+        var sphereList = new BlockingCollection<Models.Sphere>();
 
         Parallel.ForEach(
             set.Objects.Keys,
             (objectIndex) =>
             {
+                var sphere = new Models.Sphere();
                 var objectNeighborList = neighborhood.GetObjectNeigborList(objectIndex);
-                var radius = objectNeighborList
+                sphere.Radius = objectNeighborList
                     .Where(w => w.ObjectClassValue != set.Objects[objectIndex].ClassValue)
                     .Min(m => m.Distance);
-                var enemyList = objectNeighborList.Where(
+                sphere.EnemyList = objectNeighborList.Where(
                     w =>
-                        w.Distance == radius
+                        w.Distance == sphere.Radius
                         && w.ObjectClassValue != set.Objects[objectIndex].ClassValue
                 );
 
-                var relativeList = objectNeighborList
-                    .Where(w => w.Distance < radius)
-                    .Select(s => s.ObjectIndex);
+                sphere.RelativeList = objectNeighborList.Where(w => w.Distance < sphere.Radius);
 
                 logger.WriteLine(
                     "FindGroupByAcquaintance",
-                    $"Enemy list for Object[{objectIndex}] is\n\t{string.Join("\n\t", enemyList)}",
+                    $"Enemy list for Object[{objectIndex}] is\n\t{string.Join("\n\t", sphere.EnemyList)}",
                     true
                 );
 
-                foreach (var enemy in enemyList)
+                var objectIndexForEnemyCoverage = sphere.RelativeList
+                    .Select(s => s.ObjectIndex)
+                    .Append(objectIndex)
+                    .ToList();
+                sphere.CoverageList = new List<Models.Neighborhood.ObjectNeighborInfo>();
+
+                foreach (var enemy in sphere.EnemyList)
                 {
                     var enemyNeighborList = neighborhood.GetObjectNeigborList(
                         enemy.ObjectIndex,
-                        relativeList.Append(objectIndex)
+                        objectIndexForEnemyCoverage
                     );
                     logger.WriteLine(
                         "FindGroupByAcquaintance",
@@ -58,20 +63,28 @@ public class FindGroupByAcquaintance
                     );
                     foreach (var coverage in coverageList)
                     {
-                        coverageObjectIndexList.Add(coverage.ObjectIndex);
+                        sphere.CoverageList = sphere.CoverageList.Append(coverage);
                     }
                 }
+                sphereList.Add(sphere);
             }
         );
-        coverageObjectIndexList.CompleteAdding();
+        sphereList.CompleteAdding();
+
+        System.Console.WriteLine($"Found {sphereList.Count} spheres");
+
+        var allCoverageObjectIndexList = sphereList
+            .SelectMany(s => s.CoverageList?.Select(ss => ss.ObjectIndex) ?? Array.Empty<int>())
+            .ToHashSet();
+
         logger.WriteLine(
             "FindGroupByAcquaintance",
-            $"Found {coverageObjectIndexList.ToHashSet().Count} coverage objects",
+            $"Found {allCoverageObjectIndexList.Count} coverage objects",
             true
         );
         logger.WriteLine(
             "FindGroupByAcquaintance",
-            string.Join(", ", coverageObjectIndexList.ToHashSet().OrderBy(o => o)),
+            string.Join(", ", allCoverageObjectIndexList.OrderBy(o => o)),
             true
         );
 
