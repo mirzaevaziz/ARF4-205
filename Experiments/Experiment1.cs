@@ -72,6 +72,6 @@ public class Experiment1
                 neighborhood.Remove(item);
         }
 
-        var groups = Methods.FindGroupByAcquaintance.Run(logger, set, neighborhood);
+        var groups = Methods.FindGroupByCoverage.Run(logger, set, neighborhood);
     }
 }
