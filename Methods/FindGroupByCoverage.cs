@@ -10,7 +10,7 @@ public class FindGroupByCoverage
     {
         var result = new List<HashSet<int>>();
 
-        var sphereList = Models.Sphere.Find(logger, set, neighborhood);
+        var sphereList = Models.Sphere.Find(logger, set, neighborhood).ToList();
         System.Console.WriteLine($"Found {sphereList.Count()} spheres");
 
         var allCoverageObjectIndexList = sphereList
@@ -28,31 +28,44 @@ public class FindGroupByCoverage
             true
         );
 
-        var groupList = new List<Models.Group>();
-        while (allCoverageObjectIndexList.Count > 0)
+        var binaryArray = new Dictionary<Tuple<int, int>, bool>();
+        foreach (var sphere in sphereList)
         {
-            var group = new Models.Group();
-            group.CoverageObjectIndexList.Add(allCoverageObjectIndexList.ElementAt(0));
-            var countBefore = group.ObjectIndexList.Count;
-            do
+            foreach (var coverageObjectIndex in allCoverageObjectIndexList)
             {
-                group.ObjectIndexList.UnionWith(
-                    sphereList
-                        .Where(
-                            w =>
-                                group.CoverageObjectIndexList.Contains(w.ObjectIndex)
-                                || (
-                                    w.RelativeList?.Any(
-                                        a => group.CoverageObjectIndexList.Contains(a.ObjectIndex)
-                                    ) ?? false
-                                )
-                        )
-                        .Select(s => s.ObjectIndex)
-                );
-                //ToDo: Coveragelarni groupga qo'shish
-                // group.CoverageObjectIndexList.UnionWith();
-            } while (countBefore != group.ObjectIndexList.Count);
+                binaryArray[new Tuple<int, int>(sphere.ObjectIndex, coverageObjectIndex)] =
+                    sphere.ObjectIndex == coverageObjectIndex
+                    || (
+                        sphere.RelativeList?.Any(a => a.ObjectIndex == coverageObjectIndex) ?? false
+                    );
+            }
         }
+
+        // var groupList = new List<Models.Group>();
+        // while (allCoverageObjectIndexList.Count > 0)
+        // {
+        //     var group = new Models.Group();
+        //     group.CoverageObjectIndexList.Add(allCoverageObjectIndexList.ElementAt(0));
+        //     var countBefore = group.ObjectIndexList.Count;
+        //     do
+        //     {
+        //         group.ObjectIndexList.UnionWith(
+        //             sphereList
+        //                 .Where(
+        //                     w =>
+        //                         group.CoverageObjectIndexList.Contains(w.ObjectIndex)
+        //                         || (
+        //                             w.RelativeList?.Any(
+        //                                 a => group.CoverageObjectIndexList.Contains(a.ObjectIndex)
+        //                             ) ?? false
+        //                         )
+        //                 )
+        //                 .Select(s => s.ObjectIndex)
+        //         );
+        //         //ToDo: Coveragelarni groupga qo'shish
+        //         group.CoverageObjectIndexList.UnionWith(sphereList.Where().Sele;
+        //     } while (countBefore != group.ObjectIndexList.Count);
+        // }
 
         return result;
     }
