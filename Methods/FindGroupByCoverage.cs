@@ -13,6 +13,8 @@ public class FindGroupByCoverage
         var sphereList = Models.Sphere.Find(logger, set, neighborhood).ToList();
         System.Console.WriteLine($"Found {sphereList.Count()} spheres");
 
+        System.Console.WriteLine("Count of spheres {0}", sphereList.Count);
+
         var allCoverageObjectIndexList = sphereList
             .SelectMany(s => s.CoverageList?.Select(ss => ss.ObjectIndex) ?? Array.Empty<int>())
             .ToHashSet();
@@ -29,9 +31,9 @@ public class FindGroupByCoverage
         );
 
         var binaryArray = new Dictionary<Tuple<int, int>, bool>();
-        foreach (var sphere in sphereList)
+        foreach (var coverageObjectIndex in allCoverageObjectIndexList)
         {
-            foreach (var coverageObjectIndex in allCoverageObjectIndexList)
+            foreach (var sphere in sphereList)
             {
                 binaryArray[new Tuple<int, int>(sphere.ObjectIndex, coverageObjectIndex)] =
                     sphere.ObjectIndex == coverageObjectIndex
@@ -40,7 +42,7 @@ public class FindGroupByCoverage
                     );
             }
         }
-
+        System.Console.WriteLine($"binary array count = {binaryArray.Values.Count}");
         // var groupList = new List<Models.Group>();
         // while (allCoverageObjectIndexList.Count > 0)
         // {

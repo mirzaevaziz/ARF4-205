@@ -4,6 +4,11 @@ namespace GenomExperiment.Models;
 
 public class Sphere
 {
+    public Sphere(int objectIndex)
+    {
+        ObjectIndex = objectIndex;
+    }
+
     public int ObjectIndex { get; set; }
     public decimal Radius { get; set; }
     public IEnumerable<Neighborhood.ObjectNeighborInfo>? RelativeList { get; set; }
@@ -22,7 +27,7 @@ public class Sphere
             set.Objects.Keys,
             (objectIndex) =>
             {
-                var sphere = new Models.Sphere();
+                var sphere = new Models.Sphere(objectIndex);
                 var objectNeighborList = neighborhood.GetObjectNeigborList(objectIndex);
                 sphere.Radius = objectNeighborList
                     .Where(w => w.ObjectClassValue != set.Objects[objectIndex].ClassValue)
@@ -74,6 +79,6 @@ public class Sphere
             }
         );
         sphereList.CompleteAdding();
-        return sphereList;
+        return sphereList.ToList();
     }
 }
